@@ -68,7 +68,8 @@ func main() {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		panic(err)
+		os.Stdout.WriteString(err.Error())
+		os.Exit(1)
 	}
 	defer watcher.Close()
 
@@ -76,7 +77,7 @@ func main() {
 	for _, f := range files {
 		err := watcher.Add(f)
 		if err != nil {
-			os.Stderr.WriteString("can't watch "+f+": "+err.Error()+"\n")
+			os.Stderr.WriteString("can't watch " + f + ": " + err.Error() + "\n")
 			failed++
 		}
 	}
@@ -91,9 +92,12 @@ func main() {
 	for {
 		select {
 		case <-timer.C:
-			args := make([]string, 2, len(events) + 2)
+			args := make([]string, 2, len(events)+3)
 			args[0] = "-c"
 			args[1] = command
+			if len(shell) < 2 || (shell[len(shell)-2:] != "es" && shell[len(shell)-2:] != "rc") {
+				args = append(args, shell)
+			}
 			for ev := range events {
 				args = append(args, ev)
 			}
