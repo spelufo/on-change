@@ -1,0 +1,46 @@
+A tool to run commands when files change.
+
+Debounces change events, running the command only when no events
+have arrived for some given time. This is useful since editors and
+other programs often do a sequence of operations on files, producing
+many events in rapid succession.
+
+Waits for the subprocess to exit before it resumes watching.
+
+Runs the command something like `$SHELL -c COMMAND CHANGED_FILES...`
+
+
+usage: on-change [-d debounce] [-e eventmask] [-g glob]... FILES... CMD
+    -d  debounce time. (default: 300ms)
+    -e  event mask. (default: cwma)
+        include these characters to listen for these events:
+            c create
+            w write
+            r remove
+            m rename (move)
+            a chmod (access)
+    -g  trigger events only when the file basename matches one of the given globs.
+
+
+For example:
+    $ on-change *.go 'go fmt'
+    $ on-change -g '*.go' . 'go build'
+    $ on-change -g '*.c' -g '*.h' src 'make'
+
+In the first example the *.go glob will be expanded by the shell and only the existing
+files that match will be watched. In the second example, the current directory will be
+watched for file changes, and `on-change` will only run the command when the files that
+changed match the glob passed. That is why it must be quoted.
+
+Using the [es shell][1] the command can be a program fragment, which has nicer syntax:
+
+    on-change *.c {
+        cc -c $*
+    }
+
+    on-change *.o {
+        cc -o foo *.o
+    }
+
+
+[1]: https://wryun.github.io/es-shell/
